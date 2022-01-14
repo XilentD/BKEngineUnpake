@@ -11,7 +11,7 @@ namespace BKEUnpake.V40
     public class FileFix
     {
         /// <summary>
-        /// BZip2文件头
+        /// zstd文件头
         /// </summary>
         private static byte[] fixedHeader = new byte[]
         {

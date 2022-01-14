@@ -27,14 +27,14 @@ namespace BKEUnpake.V20
         /// 解密列表数据
         /// </summary>
         /// <param name="listdata">文件中列表原数据</param>
-        /// <param name="listdecryptkey">表解密key</param>
-        /// <param name="filekey">文件解密key</param>
+        /// <param name="listdecryptkey">文件表解密key</param>
+        /// <param name="filekey">文件key</param>
         /// <returns>解密后的文件列表压缩数据</returns>
         public static byte[] DecryptList(byte[] listdata,uint listdecryptkey,out uint filekey)
         {
-            
+            //解密列表且计算得到文件key
             filekey = DecryptHelper.DecryptList(listdata, (uint)listdata.Length, listdecryptkey);
-            return BZip2Helper.DecompressData(listdata);           
+            return BZip2Helper.DecompressData(listdata);            //解压数据并返回
         }
 
         /// <summary>
@@ -46,50 +46,50 @@ namespace BKEUnpake.V20
         /// <param name="normalreslist">普通资源表数组</param>
         public static void ListAnalysis(byte[] metalistdata, uint listcount, out List<BZip2CompressedResources> compressedreslist, out List<NormalResources> normalreslist)
         {
-            uint count = 0;               
+            uint count = 0;                //表项计数
             BZip2CompressedResources compressedRes;
             NormalResources normalRes;
             List<BZip2CompressedResources> mCompressedReslist = new List<BZip2CompressedResources>();
             List<NormalResources> mNormalReslist = new List<NormalResources>();
 
-           
+            //初始化列表指针
             uint listPointer = 0;
 
             while (count < listcount)
             {
-               
+                //储存字符串长度
                 uint utf8strLength;
-                
+                //获取文件名
                 string fileName = StructureConvert.GetUTF8String(metalistdata, listPointer,out utf8strLength);
 
-                
+                //列表指针移到字符串结束符之后
                 listPointer += utf8strLength+1;
 
                 uint type = BitConverter.ToUInt32(metalistdata, (int)(listPointer + 0x8));
                 if (type == 0)
 
-                {  
+                {   //当列表项为普通资源时
                     normalRes.FileName = fileName;
                     normalRes.FileOffset = BitConverter.ToUInt32(metalistdata, (int)(listPointer));
                     normalRes.FileSize = BitConverter.ToUInt32(metalistdata, (int)(listPointer + 0x4));
                     normalRes.ResourcesType = 0;
-                    mNormalReslist.Add(normalRes);       
+                    mNormalReslist.Add(normalRes);        //添加数组
                     listPointer += 0x0C;
                 }
                 else if (type == 1)
 
-                {   
+                {   //当列表项为压缩资源时
                     compressedRes.FileName= fileName;
                     compressedRes.FileOffset = BitConverter.ToUInt32(metalistdata, (int)(listPointer));
                     compressedRes.UncompressedSize = BitConverter.ToUInt32(metalistdata, (int)(listPointer + 0x4));
                     compressedRes.ResourcesType = 1;
                     compressedRes.FileSize = BitConverter.ToUInt32(metalistdata, (int)(listPointer + 0xC));
-                    mCompressedReslist.Add(compressedRes);  
+                    mCompressedReslist.Add(compressedRes);  //添加数组
                     listPointer += 0x10;
                 }
-                count++;            
+                count++;            //表项计数自增
             }
-            compressedreslist = mCompressedReslist;     
+            compressedreslist = mCompressedReslist;     //解析得资源表项
             normalreslist = mNormalReslist;
         }
     }

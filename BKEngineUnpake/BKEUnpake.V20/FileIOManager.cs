@@ -23,14 +23,14 @@ namespace BKEUnpake.V20
             {
                 try
                 {
-                    fileStream.Seek(compressedinfo.FileOffset, SeekOrigin.Begin);      
-                    buffer = new byte[compressedinfo.FileSize];             
-                    fileStream.Read(buffer, 0, buffer.Length);              
-                    compresseddatalist.Add(buffer.ToList());              
+                    fileStream.Seek(compressedinfo.FileOffset, SeekOrigin.Begin);       //设置读取偏移
+                    buffer = new byte[compressedinfo.FileSize];             //设置要读取的字节数
+                    fileStream.Read(buffer, 0, buffer.Length);                 //读取文件
+                    compresseddatalist.Add(buffer.ToList());                 //添加到数组
                 }
                 catch(Exception ex)
                 {
-                    errormessage = "读取文件失败\n" + ex.Message;    
+                    errormessage = "读取文件失败\n" + ex.Message;     //设置错误信息
                     return null;
                 }
             }
@@ -51,14 +51,14 @@ namespace BKEUnpake.V20
             {
                 try
                 {
-                    fileStream.Seek(normalinfo.FileOffset, SeekOrigin.Begin);  
-                    byte[] buffer = new byte[normalinfo.FileSize];             
-                    fileStream.Read(buffer, 0, buffer.Length);         
-                    normaldatalist.Add(buffer.ToList());               
+                    fileStream.Seek(normalinfo.FileOffset, SeekOrigin.Begin);   //设置读取偏移
+                    byte[] buffer = new byte[normalinfo.FileSize];              //设置要读取的字节数
+                    fileStream.Read(buffer, 0, buffer.Length);          //读取文件
+                    normaldatalist.Add(buffer.ToList());                 //添加到数组
                 }
                 catch(Exception ex)
                 {
-                    errormessage = "读取文件失败\n" + ex.Message;   
+                    errormessage = "读取文件失败\n" + ex.Message;     //设置错误信息
                     return null;
                 }
             }
@@ -77,7 +77,7 @@ namespace BKEUnpake.V20
         {
             FileInfo fileInfo = new FileInfo(filepath);
 
-           
+            //文件夹不存在则创建
             if (Directory.Exists(fileInfo.DirectoryName)==false)
             {
                 Directory.CreateDirectory(fileInfo.DirectoryName);
@@ -86,8 +86,8 @@ namespace BKEUnpake.V20
             FileStream fs=null;
             try
             {
-                fs = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);          
-                fs.Write(data, 0, data.Length);                        
+                fs = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);           //实例化写入文件流
+                fs.Write(data, 0, data.Length);                         //写入数据
                 errormessage = null;
                 return true;
             }

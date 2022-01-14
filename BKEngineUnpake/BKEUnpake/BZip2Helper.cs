@@ -8,7 +8,7 @@ using ICSharpCode.SharpZipLib.BZip2;
 namespace BKEUnpake
 {
     /// <summary>
-    /// 数据解压
+    /// bz2压缩解压
     /// </summary>
     public class BZip2Helper
     {
@@ -23,21 +23,21 @@ namespace BKEUnpake
             try
             {
                 List<byte> metadata = new List<byte>();
-               
+                //输入到bzip2库进行解压
                 BZip2InputStream unbZip2 = new BZip2InputStream(ms);
                 int temp;
                 while (true)
-                {   
+                {   //循环读取数据
                     temp = unbZip2.ReadByte();
                     if (temp == -1)
                     {   
-                       
+                        //读取到-1则为读取完毕
                         break;
                     }
-                    metadata.Add((byte)(uint)temp);        
+                    metadata.Add((byte)(uint)temp);         //添加数据到数组
                 }
 
-                return metadata.ToArray();                 
+                return metadata.ToArray();                   //解压得到数据
             }
             catch
             {
@@ -45,7 +45,7 @@ namespace BKEUnpake
             }
             finally
             {
-                ms?.Close();                 //释放资源
+                ms?.Close();               
                 ms?.Dispose();
             }
         }
@@ -56,7 +56,7 @@ namespace BKEUnpake
         /// <returns>解压后的数据数组 null为解压失败</returns>
         public static List<List<byte>> DecompressData(List<List<byte>> data)
         {
-            List<List<byte>> unzipdata = new List<List<byte>>();        //定义解压后数据数组
+            List<List<byte>> unzipdata = new List<List<byte>>();     
             foreach(List<byte> databuffer in data)
             {
                 //解压数据

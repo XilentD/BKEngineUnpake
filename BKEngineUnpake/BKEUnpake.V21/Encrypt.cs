@@ -22,7 +22,7 @@ namespace BKEUnpake.V21
             {
                 if (temp == 0)
                 {   
-                   
+                    //字符串结束null判断
                     break;
                 }
                 uintfilename = Convert.ToUInt32(temp);

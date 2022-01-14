@@ -75,12 +75,12 @@ namespace BKEUnpake.V40
         /// <returns>文件key</returns>
         public static uint DecryptCompressedTable(byte[] buffer,int length,uint tableKey)
         {
-         
+            //长度为0返回原key
             if (length == 0)
             {
                 return tableKey;
             }
-           
+            //数据索引
             int index = 0;
 
             do
@@ -118,7 +118,7 @@ namespace BKEUnpake.V40
             xorLength ^= 0x000000EA;
             xorLength &= 0x000001FF;
             xorLength += 0x00000200;
-            xorLength &= 0xFFFFFFF8;         
+            xorLength &= 0xFFFFFFF8;            //向下8字节对齐
         }
 
         /// <summary>

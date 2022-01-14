@@ -60,7 +60,7 @@ namespace BKEUnpake.V21
         /// <param name="filepath">文件路径</param>
         public BKARCFile(string filepath)
         {
-            this.FileAnalysis(filepath);            
+            this.FileAnalysis(filepath);            //文件特征分析
         }
         /// <summary>
         /// 文件解析
@@ -77,21 +77,21 @@ namespace BKEUnpake.V21
             }
             try
             {
-                this.fileStream = new FileStream(filepath, FileMode.Open, FileAccess.Read);      
-                byte[] header = new byte[6];                                
-                fileStream.Read(header, 0, header.Length);                  
+                this.fileStream = new FileStream(filepath, FileMode.Open, FileAccess.Read);       //创建文件流
+                byte[] header = new byte[6];                                 //文件头
+                fileStream.Read(header, 0, header.Length);                  //读取文件头6个字节
                 for(int index=0;index<header.Length;index++)
                 {   //循环检查文件头
                     if (header[index] != FileSignature.Header[index])
                     {
-                        this.isVaild = false;              
+                        this.isVaild = false;               //检查失败
                         this.errorMessage = "请选择正确的bkarc封包";
                         return;
                     }
                 }
-                this.isVaild = true;           
-                string noExtensionFilename = fileInfo.Name.Replace(fileInfo.Extension,"");     
-                this.outDirectory = fileInfo.DirectoryName+"/Extract/"+noExtensionFilename+"/";     
+                this.isVaild = true;            //文件格式正确
+                string noExtensionFilename = fileInfo.Name.Replace(fileInfo.Extension,"");     //获取无扩展文件名
+                this.outDirectory = fileInfo.DirectoryName+"/Extract/"+noExtensionFilename+"/";     //设置导出路径
             }
             catch (Exception ex)
             {
@@ -107,12 +107,12 @@ namespace BKEUnpake.V21
         public bool DecryptFile()
         {
             if (this.fileStream == null)
-            {   
+            {   //文件为空则返回失败
                 this.errorMessage = "文件对象不存在";
                 return false;
             }
             if (this.isVaild == false)
-            {   
+            {   //文件非法
                 this.errorMessage = "文件不是有效bkarc文件";
                 return false;
             }
@@ -120,16 +120,16 @@ namespace BKEUnpake.V21
             try
             {
                 byte[] listinfo = new byte[12];
-                this.fileStream.Seek(this.fileStream.Length - listinfo.Length, SeekOrigin.Begin);       
-                this.fileStream.Read(listinfo, 0, listinfo.Length);   
-                BKARCList.FileListInfoAnalysis(listinfo, out this.listInfo);       
+                this.fileStream.Seek(this.fileStream.Length - listinfo.Length, SeekOrigin.Begin);       //设置文件流位置
+                this.fileStream.Read(listinfo, 0, listinfo.Length);   //读取尾部12字节
+                BKARCList.FileListInfoAnalysis(listinfo, out this.listInfo);        //解析列表信息结构
 
                 byte[] listfiledata = new byte[this.listInfo.ListDataSize];
-                
-                this.fileStream.Seek(this.fileStream.Length - listinfo.Length - listfiledata.Length, SeekOrigin.Begin);     
+                //读取文件中的列表数据
+                this.fileStream.Seek(this.fileStream.Length - listinfo.Length - listfiledata.Length, SeekOrigin.Begin);     //设置列表数据起始位置
                 this.fileStream.Read(listfiledata, 0, listfiledata.Length);
 
-                byte[] list = BKARCList.DecryptList(listfiledata, this.listInfo.ListDecryptKey, out this.filekey);     
+                byte[] list = BKARCList.DecryptList(listfiledata, this.listInfo.ListDecryptKey, out this.filekey);     //解密列表
 
 
                 if (list == null)
@@ -139,26 +139,27 @@ namespace BKEUnpake.V21
                 }
 
 
-               
+                //解析文件表
                 BKARCList.ListAnalysis(list, this.listInfo.ListCount, out this.mCompressedResourceslist, out this.mNormalResourceslist);                
 
                 if (this.mCompressedResourceslist != null || this.mCompressedResourceslist.Count > 0)
                 {
-     
+                    //压缩资源检查
+                    //读取压缩资源文件
                     List<List<byte>> compresseddata = FileIOManager.ReadCompressedResources(this.fileStream, this.mCompressedResourceslist, out this.errorMessage);        
                     if (compresseddata == null)
                     {
                         return false;
                     }
-                    FileFix.CompressedResourcesFix(compresseddata);           
-                    List<List<byte>> unzipdata = BZip2Helper.DecompressData(compresseddata);       
+                    FileFix.CompressedResourcesFix(compresseddata);             //修复文件头
+                    List<List<byte>> unzipdata = BZip2Helper.DecompressData(compresseddata);        //解压文件
                     if (unzipdata == null || unzipdata.Count <= 0)
                     {
                         this.errorMessage = "文件解压失败或无压缩资源";
                     }
                     else
                     {
-                        
+                        //检查格式并导出文件
                         if (this.CheckAndOutput(unzipdata,this.mCompressedResourceslist) == false)             
                         {
                             Debug.WriteLine("文件导出失败");
@@ -171,11 +172,12 @@ namespace BKEUnpake.V21
 
                 if (this.mNormalResourceslist != null || this.mNormalResourceslist.Count > 0)
                 {
-
+                    //普通资源检查
+                    //读取普通资源
                     List<List<byte>> normalres = FileIOManager.ReadNormalResources(this.fileStream, this.mNormalResourceslist, out this.errorMessage); 
                     for (int norresindex = 0; norresindex < normalres.Count; norresindex++)
                     {   
-                        
+                        //循环解密文件
                         normalres[norresindex]= DecryptHelper.DecryptFile(normalres.ElementAt(norresindex).ToArray(), 
                                                                           (int)this.filekey, 
                                                                           this.mNormalResourceslist.ElementAt(norresindex).FileSize, 
@@ -183,7 +185,7 @@ namespace BKEUnpake.V21
                                                                          .ToList();
                     }
 
-            
+                    //检查格式并导出文件
                     if (this.CheckAndOutput(normalres,this.mNormalResourceslist)==false)               
                     {
                         Debug.WriteLine("文件导出失败");
@@ -209,29 +211,29 @@ namespace BKEUnpake.V21
         {
             for (int dataindex = 0; dataindex < data.Count; dataindex++)
             {
-              
+                //设置文件名
                 string filename = ziplist.ElementAt(dataindex).FileNameHash.ToString("x8").ToUpper();
-                byte[] buffer = new byte[16];                              
-                data.ElementAt(dataindex).CopyTo(0, buffer, 0, buffer.Length);     
+                byte[] buffer = new byte[16];                               //定义16字节文件
+                data.ElementAt(dataindex).CopyTo(0, buffer, 0, buffer.Length);      //读取文件头
 
                 foreach (KeyValuePair<string, string> valuePair in FormatCheck.GetFileFormat)
                 {   
-                  
-                    List<byte> magic = Encoding.UTF8.GetBytes(valuePair.Key).ToList(); 
+                    //遍历文件格式
+                    List<byte> magic = Encoding.UTF8.GetBytes(valuePair.Key).ToList();  //获取头标志特征码
                     if (FormatCheck.FileCheck(buffer, magic.ToArray()))
                     {
-                        filename += valuePair.Value;         
+                        filename += valuePair.Value;          //加上文件扩展名
                         break;
                     }
                 }
 
-               
+                //非资源文件
                 if (filename.Split('.').Length <= 1)
                 {
                     filename += ".bkpsr";
                 }
 
-              
+                //写入数据到硬盘
                 if (FileIOManager.WriteFile(data.ElementAt(dataindex).ToArray(), this.outDirectory + filename, out this.errorMessage) == false)
                 {
                     return false;

@@ -26,7 +26,7 @@ namespace BKEUnpake
         {
             filedata.ForEach(sfileData => 
             {
-               
+                //插入文件头
                 sfileData.InsertRange(0, fixedHeader);
             });
         }
