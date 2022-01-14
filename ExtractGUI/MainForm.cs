@@ -41,7 +41,7 @@ namespace ExtractGUI
 
         private void cmdExtract_Click(object sender, EventArgs e)
         {
-            if (this.cmbType.SelectedIndex <= 0)
+            if (this.cmbType.SelectedIndex < 0)
             {
                 MessageBox.Show("请选择封包格式", "Error");
                 return;
